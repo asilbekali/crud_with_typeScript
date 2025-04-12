@@ -144,6 +144,110 @@ app.get("/book", async (req, res) => {
     }
 });
 
+
+
+
+
+
+/**
+ * @swagger
+ * /book/{id}:
+ *   patch:
+ *     summary: Update a book's details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The book ID
+ *       - in: body
+ *         name: name
+ *         description: The name of the book
+ *         schema:
+ *           type: string
+ *           example: "The Great Gatsby"
+ *     responses:
+ *       200:
+ *         description: Successfully updated the book
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: "The Great Gatsby"
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Error in updating book
+ */
+app.patch("/book/:id", async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    try {
+        const updatedBook = await prisma.book.update({
+            where: { id: Number(id) },
+            data: { name: name },
+        });
+        res.status(200).json(updatedBook);
+    } catch (error) {
+        if (error.code === "P2025") {  // Prisma error when no record is found
+            res.status(404).json({ message: "Book not found" });
+        } else {
+            console.error(error);
+            res.status(500).json({ message: "Error in updating book" });
+        }
+    }
+});
+
+
+
+
+/**
+ * @swagger
+ * /book/{id}:
+ *   delete:
+ *     summary: Delete a book by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The book ID
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the book
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Error in deleting book
+ */
+app.delete("/book/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deletedBook = await prisma.book.delete({
+            where: { id: Number(id) },
+        });
+        res.status(200).json({ message: "Book successfully deleted", deletedBook });
+    } catch (error) {
+        if (error.code === "P2025") {  // Prisma error when no record is found
+            res.status(404).json({ message: "Book not found" });
+        } else {
+            console.error(error);
+            res.status(500).json({ message: "Error in deleting book" });
+        }
+    }
+});
+
+
 app.listen(3000, () => {
     console.log("Server started...");
 });
