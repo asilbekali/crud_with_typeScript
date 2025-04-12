@@ -21,21 +21,28 @@ app.post("/book", async (req: Request, res: Response) => {
         res.status(500).send({ message: "Error in creating book" });
     }
 });
-
-//tugatib qoyish kerak get methodini ichiga filter ham qoshish kerak
-
 app.get("/book", async (req, res) => {
-    const { name, page, limit } = req.query;
+    const { name, page = 1, limit = 10 } = req.query;
     try {
-        const bazaBookn = await prisma.book.findMany();
-        res.send(bazaBookn);
+        const books = await prisma.book.findMany({
+            where: {
+                name: name
+                    ? {
+                          equals: name as string,
+                          mode: "insensitive",
+                      }
+                    : undefined,
+            },
+            skip: (Number(page) - 1) * Number(limit),
+            take: Number(limit),
+        });
+
+        res.status(200).json({ data: books });
     } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Error in get method" });
+        console.error(error);
+        res.status(500).json({ message: "Error in GET /book method" });
     }
 });
-
-// toliqcurdini tugatib qoyish kerak get orniga pagenation va filterdan foydalanish kerak va ilojisi bolsa swagger ham qoshish kerrak
 
 app.listen(3000, () => {
     console.log("Server started...");
